@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Expedition Tracker - Identity Fixed</title>
+    <title>Expedition Tracker - Majestic Pantheon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -20,14 +20,13 @@
             overflow-x: hidden;
         }
 
-        /* 動態背景 Canvas 樣式 */
         #dustCanvas {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: -1; /* 置於所有內容後方 */
+            z-index: -1;
             pointer-events: none;
         }
 
@@ -41,8 +40,18 @@
         .page { display: none; }
         .page.active { display: block; animation: pageIn 0.4s ease-out; }
         @keyframes pageIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .rank-item-container { border-bottom: 1px solid rgba(197, 160, 89, 0.1); padding: 15px 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-        .title-tag { font-family: 'Cinzel'; font-size: 7px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.7; }
+        
+        /* 稱號與排名樣式優化 */
+        .rank-item-container { border-bottom: 1px solid rgba(197, 160, 89, 0.1); padding: 18px 8px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+        .title-tag { font-family: 'Cinzel'; font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.2em; padding: 2px 8px; border-radius: 4px; }
+        
+        /* 稱號配色與發光效果 */
+        .badge-goat { color: #FFD700; background: rgba(255, 215, 0, 0.1); text-shadow: 0 0 8px rgba(255, 215, 0, 0.6); border: 1px solid rgba(255, 215, 0, 0.3); }
+        .badge-legendary { color: #E2E2E2; background: rgba(226, 226, 226, 0.1); text-shadow: 0 0 8px rgba(226, 226, 226, 0.5); border: 1px solid rgba(226, 226, 226, 0.3); }
+        .badge-wilderness { color: #CD7F32; background: rgba(205, 127, 50, 0.1); border: 1px solid rgba(205, 127, 50, 0.3); }
+        .badge-veteran { color: #8B0000; background: rgba(139, 0, 0, 0.1); border: 1px solid rgba(139, 0, 0, 0.3); }
+        .badge-recruit { color: #666; background: rgba(100, 100, 100, 0.1); border: 1px solid rgba(100, 100, 100, 0.3); }
+
         .calendar-grid { display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 8px !important; }
         .day-box { aspect-ratio: 1/1.1; display: flex; align-items: center; justify-content: center; font-size: 11px; font-family: 'Cinzel'; cursor: pointer; background: rgba(45, 45, 45, 0.6); -webkit-clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); transition: 0.3s; }
         .active-day { background: var(--color-gold) !important; color: #000 !important; font-weight: bold; }
@@ -68,18 +77,16 @@
             <p class="text-[10px] text-stone-500 tracking-[0.3em] uppercase mt-4">Mission Briefing</p>
         </div>
         <div class="expedition-card">
-            <h3 class="text-gold-500 text-xs mb-4 uppercase tracking-widest font-bold">About This guide</h3>
+            <h3 class="text-gold-500 text-xs mb-4 uppercase tracking-widest font-bold">About This App</h3>
             <p class="text-[13px] leading-relaxed text-stone-400 mb-6 italic">
-                This is a dedicated personal tool designed to help you track and monitor your masturbation habits. By keeping a consistent record of your activities, you can gain a better understanding of your biological rhythms, manage your sexual wellness, and maintain a balanced lifestyle.
+                This application is a dedicated personal tool designed to help you track and monitor your masturbation habits. By keeping a consistent record of your activities, you can gain a better understanding of your biological rhythms, manage your sexual wellness, and maintain a balanced lifestyle.
             </p>
-            
             <h3 class="text-gold-500 text-xs mb-2 uppercase tracking-widest font-bold">Privacy & Security</h3>
-            <p class="text-[13px] leading-relaxed text-stone-400 mb-6 italic">
+            <p class="text-[11px] leading-relaxed text-stone-500 mb-6">
                 Your privacy is our top priority. All data is stored locally on your device using the <span class="text-stone-300">exp_history_v3</span> and <span class="text-stone-300">exp_user</span> protocols. This ensures that your personal history remains strictly confidential and is never uploaded to any external servers.
             </p>
-
             <h3 class="text-gold-500 text-xs mb-2 uppercase tracking-widest font-bold">How to Use</h3>
-            <p class="text-[13px] leading-relaxed text-stone-400 mb-6 italic">
+            <p class="text-[11px] leading-relaxed text-stone-500">
                 Switch to the <strong class="text-stone-300">"Log"</strong> tab to record your current session. You can review your long-term frequency and patterns in the <strong class="text-stone-300">"Calendar"</strong> section to stay mindful of your personal goals.
             </p>
         </div>
@@ -148,115 +155,80 @@
         let viewDate = new Date();
         let selectedDs = getDs(new Date());
         let myUsername = localStorage.getItem('exp_user');
+        let cloudTotal = 0;
 
         function getDs(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 
-        // --- 銀色帶狀粉塵動態背景邏輯 ---
         function initBackground() {
             const canvas = document.getElementById('dustCanvas');
             const ctx = canvas.getContext('2d');
             let particles = [];
-
-            function resize() {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            }
-
-            window.addEventListener('resize', resize);
-            resize();
-
+            function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize); resize();
             class Particle {
-                constructor() {
-                    this.init();
-                }
+                constructor() { this.init(); }
                 init() {
-                    this.x = Math.random() * canvas.width;
-                    this.y = Math.random() * canvas.height;
-                    this.speed = Math.random() * 0.5 + 0.1;
-                    this.angle = Math.random() * Math.PI * 2;
-                    this.angleSpeed = Math.random() * 0.02 - 0.01;
-                    this.size = Math.random() * 1.5 + 0.5;
-                    this.opacity = Math.random() * 0.5 + 0.1;
-                    this.length = Math.random() * 40 + 20; // 帶狀長度
+                    this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                    this.speed = Math.random() * 0.5 + 0.1; this.angle = Math.random() * Math.PI * 2;
+                    this.angleSpeed = Math.random() * 0.02 - 0.01; this.size = Math.random() * 1.5 + 0.5;
+                    this.opacity = Math.random() * 0.5 + 0.1; this.length = Math.random() * 40 + 20;
                 }
                 update() {
-                    this.y -= this.speed;
-                    this.x += Math.sin(this.angle) * 0.5;
-                    this.angle += this.angleSpeed;
+                    this.y -= this.speed; this.x += Math.sin(this.angle) * 0.5; this.angle += this.angleSpeed;
                     if (this.y < -50) this.y = canvas.height + 50;
-                    if (this.x < -50) this.x = canvas.width + 50;
-                    if (this.x > canvas.width + 50) this.x = -50;
+                    if (this.x < -50 || this.x > canvas.width + 50) this.x = Math.random() * canvas.width;
                 }
                 draw() {
                     ctx.beginPath();
-                    ctx.strokeStyle = `rgba(197, 160, 89, ${this.opacity * 0.3})`; // 淡淡的金色偏銀
-                    if(Math.random() > 0.5) ctx.strokeStyle = `rgba(200, 200, 200, ${this.opacity * 0.5})`; // 銀色
-                    ctx.lineWidth = this.size;
-                    ctx.moveTo(this.x, this.y);
-                    ctx.lineTo(this.x + Math.sin(this.angle) * 10, this.y + this.length);
-                    ctx.stroke();
+                    ctx.strokeStyle = `rgba(200, 200, 200, ${this.opacity * 0.4})`;
+                    ctx.lineWidth = this.size; ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.x + Math.sin(this.angle) * 10, this.y + this.length); ctx.stroke();
                 }
             }
-
             for (let i = 0; i < 60; i++) particles.push(new Particle());
-
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach(p => {
-                    p.update();
-                    p.draw();
-                });
+                particles.forEach(p => { p.update(); p.draw(); });
                 requestAnimationFrame(animate);
             }
             animate();
         }
 
-        // --- 原有邏輯保持不變 ---
-        function getMonthlyTotal() {
-            const now = new Date(); const curM = now.getMonth(); const curY = now.getFullYear();
-            let total = 0;
-            for (let ds in historyData) {
-                const d = new Date(ds.replace(/-/g, '/'));
-                if (d.getMonth() === curM && d.getFullYear() === curY) total += historyData[ds];
-            }
-            return total;
+        // --- 稱號邏輯升級 ---
+        function getTitleData(count) {
+            if (count >= 100) return { text: "遠征王者 (The GOAT Voyager)", class: "badge-goat" };
+            if (count >= 60)  return { text: "傳奇先鋒 (Legendary Vanguard)", class: "badge-legendary" };
+            if (count >= 30)  return { text: "荒野守望者 (Wilderness Sentinel)", class: "badge-wilderness" };
+            if (count >= 10)  return { text: "資深斥侯 (Veteran Scout)", class: "badge-veteran" };
+            return { text: "迷霧新兵 (Mist Recruit)", class: "badge-recruit" };
         }
 
-        function getTitle(count) {
-            if (count >= 100) return "遠征王者 (The GOAT Voyager)";
-            if (count >= 60)  return "傳奇先鋒 (Legendary Vanguard)";
-            if (count >= 30)  return "荒野守望者 (Wilderness Sentinel)";
-            if (count >= 10)  return "資深斥侯 (Veteran Scout)";
-            return "迷霧新兵 (Mist Recruit)";
+        async function fetchCloudData() {
+            if (!myUsername) return;
+            const { data } = await supabaseClient.from('leaderboard').select('essence_count').eq('username', myUsername).single();
+            if (data) { cloudTotal = data.essence_count; updateUI(); }
+        }
+
+        async function syncAction(increment = true) {
+            if (!myUsername) return;
+            const nextValue = increment ? cloudTotal + 1 : Math.max(0, cloudTotal - 1);
+            await supabaseClient.from('leaderboard').upsert({ 
+                username: myUsername, essence_count: nextValue, last_action_at: new Date().toISOString() 
+            }, { onConflict: 'username' });
+            cloudTotal = nextValue; updateUI(); await fetchPantheon();
         }
 
         async function initUser() {
             if (!myUsername) {
                 const name = prompt("Enter your Codename for The Pantheon:");
-                if (name && name.trim()) {
-                    myUsername = name.trim();
-                    localStorage.setItem('exp_user', myUsername);
-                    await syncCloud();
-                } else {
-                    myUsername = "Unknown_Explorer_" + Math.floor(Math.random()*1000);
-                    localStorage.setItem('exp_user', myUsername);
-                }
+                if (name && name.trim()) { myUsername = name.trim(); localStorage.setItem('exp_user', myUsername); }
+                else { myUsername = "Unknown_Explorer_" + Math.floor(Math.random()*1000); localStorage.setItem('exp_user', myUsername); }
             }
             document.getElementById('identityName').innerText = myUsername;
-            updateUI(); fetchPantheon();
-        }
-
-        async function syncCloud() {
-            if (!myUsername || SB_URL.includes('在此填入')) return;
-            await supabaseClient.from('leaderboard').upsert({ 
-                username: myUsername, 
-                essence_count: getMonthlyTotal(), 
-                last_action_at: new Date().toISOString() 
-            }, { onConflict: 'username' });
+            await fetchCloudData(); fetchPantheon();
         }
 
         async function fetchPantheon() {
-            if (SB_URL.includes('在此填入')) return;
             const now = new Date();
             document.getElementById('pantheonMonthLabel').innerText = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(now).toUpperCase() + " RANKINGS";
             const { data } = await supabaseClient.from('leaderboard').select('*').order('essence_count', { ascending: false }).limit(10);
@@ -265,29 +237,28 @@
                 const rom = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
                 let inTop10 = false;
                 ui.innerHTML = data.map((user, i) => {
-                    const title = getTitle(user.essence_count);
+                    const tData = getTitleData(user.essence_count);
                     const isMe = user.username === myUsername;
-                    if (isMe) inTop10 = true;
+                    if (isMe) { inTop10 = true; cloudTotal = user.essence_count; }
                     const gold = i < 3;
-                    return buildRankItem(rom[i], user.username, user.essence_count, title, isMe, gold);
+                    return buildRankItem(rom[i], user.username, user.essence_count, tData, isMe, gold);
                 }).join('');
                 const myRankUI = document.getElementById('myCurrentRank');
                 if (!inTop10) {
-                    const myCount = getMonthlyTotal();
                     myRankUI.innerHTML = `<p class="text-[7px] text-stone-600 uppercase mb-2 text-center tracking-widest">Your Current Standing</p>` + 
-                                       buildRankItem('??', myUsername, myCount, getTitle(myCount), true, false);
+                                       buildRankItem('??', myUsername, cloudTotal, getTitleData(cloudTotal), true, false);
                     myRankUI.style.display = 'block';
                 } else { myRankUI.style.display = 'none'; }
             }
         }
 
-        function buildRankItem(rank, name, count, title, isMe, gold) {
+        function buildRankItem(rank, name, count, tData, isMe, gold) {
             return `
-                <div class="rank-item-container ${isMe ? 'bg-gold-500/10 border-l-2 border-gold-500' : ''}">
-                    <span class="title-tag ${gold ? 'text-gold-500' : 'text-stone-600'}">${title}</span>
+                <div class="rank-item-container ${isMe ? 'bg-white/5 border-l-2 border-gold-500' : ''}">
+                    <span class="title-tag ${tData.class}">${tData.text}</span>
                     <div class="flex justify-between w-full items-center">
-                        <span class="rank-font text-xs ${gold ? 'text-gold-500' : 'text-stone-400'}">${rank}. ${name} ${isMe ? '(YOU)' : ''}</span>
-                        <span class="count-font text-sm ${gold ? 'text-gold-500' : 'text-stone-300'}">${count}</span>
+                        <span class="rank-font text-[10px] ${gold ? 'text-gold-500' : 'text-stone-400'}">${rank}. ${name} ${isMe ? '(YOU)' : ''}</span>
+                        <span class="count-font text-sm ${gold ? 'text-gold-500' : 'text-stone-200'}">${count}</span>
                     </div>
                 </div>
             `;
@@ -295,17 +266,17 @@
 
         function updateUI() {
             const count = historyData[selectedDs] || 0;
-            const mTotal = getMonthlyTotal();
             const target = new Date(selectedDs.replace(/-/g, '/'));
             const todayDs = getDs(new Date());
             const today = new Date(todayDs.replace(/-/g, '/'));
             document.getElementById('mainCountDisplay').innerText = count;
             document.getElementById('headerDate').innerText = target.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             const mDisplay = document.getElementById('monthlyTotalDisplay');
-            mDisplay.innerText = mTotal;
-            if (mTotal === 6) mDisplay.style.color = '#98002E';
-            else if (mTotal === 23) mDisplay.style.color = '#552583';
+            mDisplay.innerText = cloudTotal;
+            if (cloudTotal >= 100) mDisplay.style.color = '#FFD700'; 
+            else if (cloudTotal >= 60) mDisplay.style.color = '#E2E2E2';
             else mDisplay.style.color = '';
+
             const label = document.getElementById('statusLabel');
             const streakContainer = document.getElementById('streakContainer');
             if (target > today) {
@@ -343,7 +314,7 @@
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
             if (pageId === 'overviewPage') document.getElementById('navOverview').classList.add('active');
-            else if (pageId === 'logPage') { document.getElementById('navLog').classList.add('active'); updateUI(); }
+            else if (pageId === 'logPage') { document.getElementById('navLog').classList.add('active'); fetchCloudData(); }
             else { document.getElementById('navPantheon').classList.add('active'); fetchPantheon(); }
         };
 
@@ -370,16 +341,20 @@
         }
 
         window.onload = function() {
-            initBackground(); // 啟動銀色粉塵背景
+            initBackground();
             document.getElementById('execBtn').onclick = async () => {
                 historyData[selectedDs] = (historyData[selectedDs] || 0) + 1;
                 localStorage.setItem('exp_history_v3', JSON.stringify(historyData));
                 const rect = document.getElementById('mainCountDisplay').getBoundingClientRect();
                 for (let i = 0; i < 70; i++) spawn(rect);
-                updateUI(); await syncCloud();
+                await syncAction(true);
             };
             document.getElementById('undoBtn').onclick = async () => {
-                if (historyData[selectedDs] > 0) { historyData[selectedDs]--; localStorage.setItem('exp_history_v3', JSON.stringify(historyData)); updateUI(); await syncCloud(); }
+                if (historyData[selectedDs] > 0) { 
+                    historyData[selectedDs]--; 
+                    localStorage.setItem('exp_history_v3', JSON.stringify(historyData)); 
+                    await syncAction(false); 
+                }
             };
             function spawn(r) {
                 const p = document.createElement('div'); p.className = 'particle'; document.body.appendChild(p);
